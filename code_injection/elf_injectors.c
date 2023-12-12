@@ -103,6 +103,46 @@ int write_section_header(elf_data_t *elf, Elf_Scn *scn, GElf_Shdr *section_heade
 
 }
 
+
+int write_shdr(elf_data_t *elf, Elf_Scn *scn, GElf_Shdr *shdr, size_t sidx)
+{
+  off_t off;
+  size_t n, shdr_size;
+  void *shdr_buf;
+
+  if(!gelf_update_shdr(scn, shdr)) {
+    fprintf(stderr, "Failed to update section header\n");
+    return -1;
+  }
+
+  if(elf->bits == 32) {
+    shdr_buf = elf32_getshdr(scn);
+    shdr_size = sizeof(Elf32_Shdr);
+  } else {
+    shdr_buf = elf64_getshdr(scn);
+    shdr_size = sizeof(Elf64_Shdr);
+  }
+
+  if(!shdr_buf) {
+    fprintf(stderr, "Failed to get section header\n");
+    return -1;
+  }
+
+  off = lseek(elf->fd, elf->ehdr.e_shoff + sidx*elf->ehdr.e_shentsize, SEEK_SET);
+  if(off < 0) {
+    fprintf(stderr, "lseek failed\n");
+    return -1;
+  }
+    
+  n = write(elf->fd, shdr_buf, shdr_size);
+  if(n != shdr_size) {
+    fprintf(stderr, "Failed to write section header\n");
+    return -1;
+  }
+
+  return 0;
+}
+
 int reorder_shdrs(elf_data_t *elf, inject_data_t *inject) {
     int direction, skip;
     size_t i; 
@@ -271,6 +311,45 @@ int write_secname(elf_data_t *elf, inject_data_t *inject) {
 
   return 0;
 }
+
+int write_ehdr(elf_data_t *elf) {
+  off_t off;
+  size_t n, ehdr_size;
+  void *ehdr_buf;
+
+  if(!gelf_update_ehdr(elf->e, &elf->ehdr)) {
+    fprintf(stderr, "Failed to update executable header\n");
+    return -1;
+  }
+
+  if(elf->bits == 32) {
+    ehdr_buf = elf32_getehdr(elf->e);
+    ehdr_size = sizeof(Elf32_Ehdr);
+  } else {
+    ehdr_buf = elf64_getehdr(elf->e);
+    ehdr_size = sizeof(Elf64_Ehdr);
+  }
+
+  if(!ehdr_buf) {
+    fprintf(stderr, "Failed to get executable header\n");
+    return -1;
+  }
+
+  off = lseek(elf->fd, 0, SEEK_SET);
+  if(off < 0) {
+    fprintf(stderr, "lseek failed\n");
+    return -1;
+  }
+
+  n = write(elf->fd, ehdr_buf, ehdr_size);
+  if(n != ehdr_size) {
+    fprintf(stderr, "Failed to write executable header\n");
+    return -1;
+  }
+
+  return 0;
+}
+
 
 int rewrite_entry_point(elf_data_t *elf, inject_data_t *inject) {
   elf->ehdr.e_entry = inject->phdr.p_vaddr + inject->entry;

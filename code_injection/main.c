@@ -8,9 +8,9 @@
 
 
 
-static void exit_gracefully(char *text_format){
-    exit(EXIT_FAILURE);
-}
+// static void exit_gracefully(char *text_format){
+//     exit(EXIT_FAILURE);
+// }
 
 
 /**
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
         fclose(inject_file);
         exit(EXIT_FAILURE);
     } else {
-        fprintf(stdout, "Code buffer allocated.")
+        fprintf(stdout, "Code buffer allocated.");
     }
 
     // Reading the file into the code buffer

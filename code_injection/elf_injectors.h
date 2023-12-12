@@ -53,6 +53,9 @@ int rewrite_code_segment(elf_data_t *elf, inject_data_t *inject);
 
 int write_phdr(elf_data_t *elf, inject_data_t *inject);
 
+int write_shdr(elf_data_t *elf, Elf_Scn *scn, GElf_Shdr *shdr, size_t sidx);
+
+int write_ehdr(elf_data_t *elf);
 
 int write_secname(elf_data_t *elf, inject_data_t *inject);
 
